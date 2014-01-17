@@ -1,4 +1,5 @@
 # Simple compilation script
-
+# the root_env command should be run to set the correct root environement variables
+#
 BASE=/sps/lsst/Library
 g++ $1.cpp  ` root-config --libs --cflags` -I $BASE/Healpix_3.11/src/cxx/basic_gcc/include -L $BASE/Healpix_3.11/src/cxx/basic_gcc/lib -lhealpix_cxx -lcxxsupport -o ../bin/$1
