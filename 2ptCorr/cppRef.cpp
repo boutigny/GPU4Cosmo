@@ -1,83 +1,106 @@
-#define bcc_cxx
-
 #include <iostream>
-#include "math.h"
+#include <math.h>
 
 #include "TFile.h"
-#include "TApplication.h"
 #include "TTree.h"
-#include "TH2F.h"
+#include "TH1F.h"
 
+#define bcc_cxx
 #include "bcc.h"
 
 
 using namespace std;
 
-double angDist(double ra_1, double dec_1, double ra_2, double dec_2) {
 //
-// Return angular distance between two points in spherical coordinate 
+// Return angular distance between two points in spherical coordinates.
+// ra_ and dec_ are right ascension and declination in radians for the two points.
 //
-    double theta;
-    theta = atan(sqrt(cos(dec_2)*cos(dec_2)*sin(ra_2-ra_1)*sin(ra_2-ra_1) + 
-                                        (cos(dec_1)*sin(dec_2)-sin(dec_1)*cos(dec_2)*cos(ra_2-ra_1))*(cos(dec_1)*sin(dec_2)-sin(dec_1)*cos(dec_2)*cos(ra_2-ra_1))) /
-                                    (sin(dec_1)*sin(dec_2) + cos(dec_1)*cos(dec_2)*cos(ra_2-ra_1)));
+float AngDistance(float ra_1, float dec_1, float ra_2, float dec_2) {
+    // This was the original implementation:
+    //
+    // double theta;
+    // theta = atan(sqrt(cos(dec_2)*cos(dec_2)*sin(ra_2-ra_1)*sin(ra_2-ra_1) +
+    //     (cos(dec_1)*sin(dec_2)-sin(dec_1)*cos(dec_2)*cos(ra_2-ra_1))*(cos(dec_1)*sin(dec_2)-sin(dec_1)*cos(dec_2)*cos(ra_2-ra_1))) /
+    //     (sin(dec_1)*sin(dec_2) + cos(dec_1)*cos(dec_2)*cos(ra_2-ra_1)));
+    // return theta;
 
-    return theta;
+    float sindec1 = sinf(dec_1);
+    float cosdec1 = cosf(dec_1);
+    float sindec2 = sinf(dec_2);
+    float cosdec2 = cosf(dec_2);
+    float cosra2_ra1 = cosf(ra_2-ra_1);
+    float sinra2_ra1 = sinf(ra_2-ra_1);
+
+    float aux = (cosdec1 * sindec2) - (sindec1 * cosdec2 * cosra2_ra1);
+    float num = (cosdec2 * cosdec2 * sinra2_ra1 * sinra2_ra1) + (aux * aux);
+    float den = (sindec1 * sindec2) + (cosdec1 * cosdec2 * cosra2_ra1);
+
+    return atanf(sqrtf(num)/den);
 }
+
+
+//
+// Converts a value in degrees to radians
+//
+inline float DegToRad(float deg) {
+    const float PI = acosf(-1.0);
+    return deg*(PI/180.0);
+}
+
+
 // Main
 //
-    int main(int argc, char* argv[]) {
-    
-    double pi = acos(-1.0);
-    int count = 0;
-
-    TApplication* rootapp = new TApplication("Example",&argc,argv);
-
-// Open simulated galaxy catalog
-//
-    TFile *f = new TFile("/sps/lsst/dev/boutigny/Catalogs/Aardvark/Catalog_v1.0/truth_oscillationcorrected_unrotated/Aardvark_v1.0c_truth.190.root");
-    TTree *tree = (TTree*)f->Get("bcc");
+int main(int argc, char* argv[]) {
+    // Open simulated galaxy catalog
+    const char* inputFileName = "/sps/lsst/dev/boutigny/Catalogs/Aardvark/Catalog_v1.0/truth_oscillationcorrected_unrotated/Aardvark_v1.0c_truth.190.root";
+    TFile* inFile = TFile::Open(inputFileName);
+    TTree* tree = (TTree*)inFile->Get("bcc");
     bcc *r = new bcc(tree);
+    if (r->fChain == 0)
+        return 99;
 
-    if (r->fChain == 0) return 99;
-
-    Long64_t nentries = r->fChain->GetEntriesFast();
-    Long64_t nbytes=0, nb=0;
-
-    int nvalues = 10000;
-    int nbins = 50000;
-
-    double *ra = new double[nvalues];
-    double *dec = new double[nvalues];
-
-    for(Long64_t jentry=0; jentry<nvalues; jentry++) {
-        Long64_t ientry = r->LoadTree(jentry);
-        if (ientry < 0) break;
-        nb = r->fChain->GetEntry(jentry);
-        ra[jentry] = r->ra*pi/180.0;
-        dec[jentry] = r->dec*pi/180.0;
+    // Load the spherical coordinates of the galaxies from the input ROOT
+    // file
+    int kMaxGalaxies = 10000;
+    float* ra = new float[kMaxGalaxies];
+    float* dec = new float[kMaxGalaxies];
+    Long64_t numGalaxies;
+    for (numGalaxies=0; numGalaxies < kMaxGalaxies; numGalaxies++) {
+        if (r->LoadTree(numGalaxies) < 0)
+            break;
+        if (r->GetEntry(numGalaxies) == 0)
+            break;
+        ra[numGalaxies] = DegToRad(r->ra);
+        dec[numGalaxies] = DegToRad(r->dec);
     }
 
-// Compute distances between all pairs of simulated galaxies and store results in galgal histogram
-//
-    TH1* galgal = new TH1F("galgal", "Distance galaxy - galaxy", nbins, 0.0, 0.2);
+    if (numGalaxies < 2) {
+        cout << "Found " << numGalaxies << " galaxies in file "
+             << inputFileName << endl
+             << "Aborting execution" << endl;
+        return 99;
+    }
+    cout << "Processing " << numGalaxies << " galaxies" << endl;
 
-    for (int j=0; j<nvalues-1; j++) {
-        double ra_1 = ra[j]; double dec_1=dec[j];
-        if(j%100 == 0) cout << j << endl;
-        for(int k=j+1; k<nvalues; k++) {
-            double ra_2 = ra[k]; double dec_2=dec[k];
-            double angle = angDist(ra_1, dec_1, ra_2, dec_2);
-            galgal->Fill(angle);
+    // Compute distances between all pairs of simulated galaxies and store
+    // results in galgal histogram in ROOT
+    const int kNumBins = 50000;
+    const double kBinLow = 0.0;
+    const double kBinUp = 0.2;
+    TH1* histo = new TH1F("galgal", "Distance galaxy - galaxy", kNumBins, kBinLow, kBinUp);
+    for (int j=0; j < numGalaxies-1; j++) {
+        for (int k=j+1; k < numGalaxies; k++) {
+            histo->Fill(AngDistance(ra[j], dec[j], ra[k], dec[k]));
         }
+
+        if (j%100 == 0)
+            cout << j << endl;
     }
 
-    TFile *h = new TFile("reference_no_gpu.root","recreate");
-    galgal->Write();
-    h->Close();
+    // Save the histogram
+    TFile* outFile = new TFile("reference_no_gpu.root", "recreate");
+    histo->Write();
+    outFile->Close();
 
     return 0;
-
 }
-
-
