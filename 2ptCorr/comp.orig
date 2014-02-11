@@ -1,0 +1,4 @@
+# Simple script to compile code on GPU
+#
+BASE=/sps/lsst/Library
+nvcc $1.cu -L/usr/local/root/v5.34.14/lib -lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -lm -ldl -m64 -I/usr/local/root/v5.34.14/include -I $BASE/Healpix_3.11/src/cxx/basic_gcc/include -L $BASE/Healpix_3.11/src/cxx/basic_gcc/lib -lhealpix_cxx -lcxxsupport -o ../bin/$1
