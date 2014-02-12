@@ -23,21 +23,35 @@ __device__ float angDist(float ra_1, float dec_1, float ra_2, float dec_2) {
 //
 // Return angular distance between two points in spherical coordinate 
 //
-    float numerator, denominator, theta;
+//    float numerator, denominator, theta;
 	
-	numerator = sqrt(cos(dec_2)*cos(dec_2)*sin(ra_2-ra_1)*sin(ra_2-ra_1) + 
-                                (cos(dec_1)*sin(dec_2)-sin(dec_1)*cos(dec_2)*cos(ra_2-ra_1))*
-                                (cos(dec_1)*sin(dec_2)-sin(dec_1)*cos(dec_2)*cos(ra_2-ra_1)));
-	denominator = (sin(dec_1)*sin(dec_2) + cos(dec_1)*cos(dec_2)*cos(ra_2-ra_1));
+//	numerator = sqrt(cos(dec_2)*cos(dec_2)*sin(ra_2-ra_1)*sin(ra_2-ra_1) + 
+//                                (cos(dec_1)*sin(dec_2)-sin(dec_1)*cos(dec_2)*cos(ra_2-ra_1))*
+//                                (cos(dec_1)*sin(dec_2)-sin(dec_1)*cos(dec_2)*cos(ra_2-ra_1)));
+//	denominator = (sin(dec_1)*sin(dec_2) + cos(dec_1)*cos(dec_2)*cos(ra_2-ra_1));
 	
-	theta = atan2(numerator,denominator);
+	float sindec1 = sinf(dec_1);
+    float cosdec1 = cosf(dec_1);
+    float sindec2 = sinf(dec_2);
+    float cosdec2 = cosf(dec_2);
+    float cosra2_ra1 = cosf(ra_2-ra_1);
+    float sinra2_ra1 = sinf(ra_2-ra_1);
+
+    float aux = (cosdec1 * sindec2) - (sindec1 * cosdec2 * cosra2_ra1);
+    float num = (cosdec2 * cosdec2 * sinra2_ra1 * sinra2_ra1) + (aux * aux);
+    float den = (sindec1 * sindec2) + (cosdec1 * cosdec2 * cosra2_ra1);
+
+    return atan2f(sqrtf(num),den);
+
+	
+//	theta = atan2(numerator,denominator);
 	
 //    theta = atan(sqrt(cos(dec_2)*cos(dec_2)*sin(ra_2-ra_1)*sin(ra_2-ra_1) + 
 //                                (cos(dec_1)*sin(dec_2)-sin(dec_1)*cos(dec_2)*cos(ra_2-ra_1))*
 //                                (cos(dec_1)*sin(dec_2)-sin(dec_1)*cos(dec_2)*cos(ra_2-ra_1))) /
 //                                (sin(dec_1)*sin(dec_2) + cos(dec_1)*cos(dec_2)*cos(ra_2-ra_1)));
 
-    return theta;
+//    return theta;
 }
 
 __global__ void etBim(const float *ra, const float *dec, int *histo, const int nbins, const float bin_width, const float ang_min, 
@@ -307,7 +321,7 @@ size_t corelGPU::getBlockSize() {
 
 // Open simulated galaxy catalog in root format
 //
-    TFile *f = new TFile("/sps/lsst/dev/boutigny/Catalogs/Aardvark/Catalog_v1.0/truth_oscillationcorrected_unrotated/Aardvark_v1.0c_truth.190.root");
+    TFile *f = new TFile("../Catalogs/Aardvark/Catalog_v1.0/truth_oscillationcorrected_unrotated/Aardvark_v1.0c_truth.190.root");
     TTree *tree = (TTree*)f->Get("bcc");
     bcc *r = new bcc(tree);
 
@@ -452,7 +466,7 @@ size_t corelGPU::getBlockSize() {
 
     delete corel;
 
-    TFile *h = new TFile("gpu.root","recreate");
+    TFile *h = new TFile("../output/gpu.root","recreate");
     galgal->Write();
     gal->Write();
     zdis->Write();

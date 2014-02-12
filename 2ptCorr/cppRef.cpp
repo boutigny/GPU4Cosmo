@@ -35,7 +35,7 @@ float AngDistance(float ra_1, float dec_1, float ra_2, float dec_2) {
     float num = (cosdec2 * cosdec2 * sinra2_ra1 * sinra2_ra1) + (aux * aux);
     float den = (sindec1 * sindec2) + (cosdec1 * cosdec2 * cosra2_ra1);
 
-    return atanf(sqrtf(num)/den);
+    return atan2f(sqrtf(num),den);
 }
 
 
@@ -52,7 +52,7 @@ inline float DegToRad(float deg) {
 //
 int main(int argc, char* argv[]) {
     // Open simulated galaxy catalog
-    const char* inputFileName = "/sps/lsst/dev/boutigny/Catalogs/Aardvark/Catalog_v1.0/truth_oscillationcorrected_unrotated/Aardvark_v1.0c_truth.190.root";
+    const char* inputFileName = "../Catalogs/Aardvark/Catalog_v1.0/truth_oscillationcorrected_unrotated/Aardvark_v1.0c_truth.190.root";
     TFile* inFile = TFile::Open(inputFileName);
     TTree* tree = (TTree*)inFile->Get("bcc");
     bcc *r = new bcc(tree);
@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Save the histogram
-    TFile* outFile = new TFile("reference_no_gpu.root", "recreate");
+    TFile* outFile = new TFile("../output/reference_no_gpu.root", "recreate");
     histo->Write();
     outFile->Close();
 

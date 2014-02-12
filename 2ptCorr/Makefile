@@ -54,13 +54,13 @@ CXX_OBJECTS   = $(CXX_SOURCES:.cpp=.o)
 
 # Targets
 #
-all: angCorr cppRef
+all: ../bin/angCorr ../bin/cppRef
 
-angCorr: $(CUDA_OBJECTS) 
+../bin/angCorr: $(CUDA_OBJECTS) 
 	@echo -e "\nLinking" $@ 
 	$(NVCC) $(ALL_LD_FLAGS) $(CUDA_OBJECTS) -o $@
 
-cppRef: $(CXX_OBJECTS)
+../bin/cppRef: $(CXX_OBJECTS)
 	@echo -e "\nLinking" $@
 	$(CXX) $(ROOT_LD_FLAGS) $(CXX_OBJECTS) -o $@
 
