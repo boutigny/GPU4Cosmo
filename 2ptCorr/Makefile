@@ -23,6 +23,7 @@ HEALPIX_LD_FLAGS  := -L$(HEALPIX_PATH)/src/cxx/basic_gcc/lib -lhealpix_cxx -lcxx
 CUDA_PATH     ?= /opt/cuda-5.5
 NVCC          := $(CUDA_PATH)/bin/nvcc -ccbin $(CXX)
 NVCC_CC_FLAGS := -g -G -I$(CUDA_PATH)/include 
+# NVCC_CC_FLAGS := -I$(CUDA_PATH)/include 
 NVCC_LD_FLAGS := -L$(CUDA_PATH)/lib -lcuda -lm -lstdc++
 
 ALL_CC_FLAGS  := $(NVCC_CC_FLAGS)
@@ -36,17 +37,17 @@ ALL_LD_FLAGS  += $(addprefix -Xlinker ,$(HEALPIX_LD_FLAGS))
 
 # CUDA code generation flags
 # 
-GENCODE_SM10  := -gencode arch=compute_10,code=sm_10
-GENCODE_SM20  := -gencode arch=compute_20,code=sm_20
-GENCODE_SM30  := -gencode arch=compute_30,code=sm_30 \
+#GENCODE_SM10  := -gencode arch=compute_10,code=sm_10
+#GENCODE_SM20  := -gencode arch=compute_20,code=sm_20
+#GENCODE_SM30  := -gencode arch=compute_30,code=sm_30 \
                  -gencode arch=compute_35,code=\"sm_35,compute_35\"
-GENCODE_FLAGS := $(GENCODE_SM10) $(GENCODE_SM20) $(GENCODE_SM30)
+#GENCODE_FLAGS := $(GENCODE_SM10) $(GENCODE_SM20) $(GENCODE_SM30)
 
 # Source files
 #
 .SUFFIXES : .o .cu .cpp
 
-CUDA_SOURCES := angCorr.cu
+CUDA_SOURCES := angCorr.cu cudaRef.cu
 CUDA_OBJECTS  = $(CUDA_SOURCES:.cu=.o)
 
 CXX_SOURCES  := cppRef.cpp 
@@ -54,15 +55,20 @@ CXX_OBJECTS   = $(CXX_SOURCES:.cpp=.o)
 
 # Targets
 #
-all: ../bin/angCorr ../bin/cppRef
+all: ../bin/angCorr ../bin/cppRef ../bin/cudaRef
 
-../bin/angCorr: $(CUDA_OBJECTS) 
+../bin/angCorr: angCorr.o
 	@echo -e "\nLinking" $@ 
-	$(NVCC) $(ALL_LD_FLAGS) $(CUDA_OBJECTS) -o $@
+	$(NVCC) $(ALL_LD_FLAGS) angCorr.o -o $@
 
 ../bin/cppRef: $(CXX_OBJECTS)
 	@echo -e "\nLinking" $@
 	$(CXX) $(ROOT_LD_FLAGS) $(CXX_OBJECTS) -o $@
+
+../bin/cudaRef: cudaRef.o
+	@echo -e "\nLinking" $@
+	$(NVCC) $(ALL_LD_FLAGS) cudaRef.o -o $@
+
 
 .cu.o:
 	@echo -e "\nCompiling" $<
@@ -73,6 +79,6 @@ all: ../bin/angCorr ../bin/cppRef
 	$(CXX) $(CXX_FLAGS) $(ROOT_CXX_FLAGS) -o $@ -c $<
 
 clean:
-	-rm -f angCorr cppRef *.o *~
+	-rm -f angCorr cppRef cudaRef *.o *~
 
 buildall: clean all
