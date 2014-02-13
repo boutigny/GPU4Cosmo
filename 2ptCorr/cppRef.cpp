@@ -1,6 +1,8 @@
 #define bcc_cxx
 
 #include <iostream>
+#include <unistd.h>
+#include <stdlib.h>
 #include "math.h"
 
 #include "TFile.h"
@@ -33,9 +35,15 @@ double angDist(double ra_1, double dec_1, double ra_2, double dec_2) {
 
     TApplication* rootapp = new TApplication("Example",&argc,argv);
 
+    if (argc != 3) {
+      cout << "Usage: " << argv[0] << " <input file> <output file>" << endl;
+      exit(1);
+    }
+    
 // Open simulated galaxy catalog
 //
-    TFile *f = new TFile("/sps/lsst/dev/boutigny/Catalogs/Aardvark/Catalog_v1.0/truth_oscillationcorrected_unrotated/Aardvark_v1.0c_truth.190.root");
+    // TFile *f = new TFile("/sps/lsst/dev/boutigny/Catalogs/Aardvark/Catalog_v1.0/truth_oscillationcorrected_unrotated/Aardvark_v1.0c_truth.190.root");
+    TFile *f = new TFile(argv[1]);
     TTree *tree = (TTree*)f->Get("bcc");
     bcc *r = new bcc(tree);
 
@@ -72,7 +80,8 @@ double angDist(double ra_1, double dec_1, double ra_2, double dec_2) {
         }
     }
 
-    TFile *h = new TFile("reference_no_gpu.root","recreate");
+    // TFile *h = new TFile("reference_no_gpu.root","recreate");
+    TFile *h = new TFile(argv[2]);
     galgal->Write();
     h->Close();
 

@@ -13,7 +13,7 @@
 #include "healpix_map.h"
 #include "planck_rng.h"
 #include "pointing.h"
-#include "error_handling.h"
+// #include "error_handling.h"
 
 #include "bcc.h"
 
@@ -305,9 +305,15 @@ size_t corelGPU::getBlockSize() {
 
     TApplication* rootapp = new TApplication("Example",&argc,argv);
 
+    if (argc != 3) {
+      cout << "Usage: " << argv[0] << " <input file> <output file>" << endl;
+      exit(1);
+    }
+    
 // Open simulated galaxy catalog in root format
 //
-    TFile *f = new TFile("/sps/lsst/dev/boutigny/Catalogs/Aardvark/Catalog_v1.0/truth_oscillationcorrected_unrotated/Aardvark_v1.0c_truth.190.root");
+    // TFile *f = new TFile("/sps/lsst/dev/boutigny/Catalogs/Aardvark/Catalog_v1.0/truth_oscillationcorrected_unrotated/Aardvark_v1.0c_truth.190.root");
+    TFile *f = new TFile(argv[1]);
     TTree *tree = (TTree*)f->Get("bcc");
     bcc *r = new bcc(tree);
 
@@ -452,7 +458,8 @@ size_t corelGPU::getBlockSize() {
 
     delete corel;
 
-    TFile *h = new TFile("gpu.root","recreate");
+    // TFile *h = new TFile("gpu.root","recreate");
+    TFile *h = new TFile(argv[2],"recreate");
     galgal->Write();
     gal->Write();
     zdis->Write();
