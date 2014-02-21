@@ -1,7 +1,8 @@
 #include <iostream>
 #include <unistd.h>
 #include <stdlib.h>
-#include "math.h"
+#include <string.h>
+#include <math.h>
 
 #include "TFile.h"
 #include "TTree.h"
@@ -18,14 +19,6 @@ using namespace std;
 // ra_ and dec_ are right ascension and declination in radians for the two points.
 //
 float AngDistance(float ra_1, float dec_1, float ra_2, float dec_2) {
-    // This was the original implementation:
-    //
-    // double theta;
-    // theta = atan(sqrt(cos(dec_2)*cos(dec_2)*sin(ra_2-ra_1)*sin(ra_2-ra_1) +
-    //     (cos(dec_1)*sin(dec_2)-sin(dec_1)*cos(dec_2)*cos(ra_2-ra_1))*(cos(dec_1)*sin(dec_2)-sin(dec_1)*cos(dec_2)*cos(ra_2-ra_1))) /
-    //     (sin(dec_1)*sin(dec_2) + cos(dec_1)*cos(dec_2)*cos(ra_2-ra_1)));
-    // return theta;
-
     float sindec1 = sinf(dec_1);
     float cosdec1 = cosf(dec_1);
     float sindec2 = sinf(dec_2);
@@ -37,53 +30,56 @@ float AngDistance(float ra_1, float dec_1, float ra_2, float dec_2) {
     float num = (cosdec2 * cosdec2 * sinra2_ra1 * sinra2_ra1) + (aux * aux);
     float den = (sindec1 * sindec2) + (cosdec1 * cosdec2 * cosra2_ra1);
 
-    return atan2f(sqrtf(num),den);
+    return atan2f(sqrtf(num), den);
 }
 
 
-    if (argc != 3) {
-      cout << "Usage: " << argv[0] << " <input file> <output file>" << endl;
-      exit(1);
-    }
-    
-// Open simulated galaxy catalog
-//
-    // TFile *f = new TFile("/sps/lsst/dev/boutigny/Catalogs/Aardvark/Catalog_v1.0/truth_oscillationcorrected_unrotated/Aardvark_v1.0c_truth.190.root");
-    TFile *f = new TFile(argv[1]);
-    TTree *tree = (TTree*)f->Get("bcc");
-    bcc *r = new bcc(tree);
-
-    if (r->fChain == 0) return 99;
-
-    Long64_t nentries = r->fChain->GetEntriesFast();
-    Long64_t nbytes=0, nb=0;
-
-    int nvalues = 10000;
-    int nbins = 50000;
-=======
 //
 // Converts a value in degrees to radians
 //
 inline float DegToRad(float deg) {
     const float PI = acosf(-1.0);
-    return deg*(PI/180.0);
+    return deg * (PI/180.0f);
 }
->>>>>>> 54c9cfff9f6e0db00960556b68365b6741d9ddf9
 
 
+//
+// Show this program usage
+//
+void Usage(const char* path) {
+    const char* slash = strrchr(path, '/');
+    const char* progName = (slash != NULL) ? ++slash : path;
+    cout << "Usage: " << progName << " <inputFile> <outpuFile>" << endl;
+}
+
+
+//
 // Main
 //
-int main(int argc, char* argv[]) {
+int main(int argc, const char* argv[]) {
+    // Parse command line
+    if (argc < 3) {
+        Usage(argv[0]);
+        return 1;
+    }
+    const char* inputFileName = argv[1];
+    const char* outputFileName = argv[2];
+
     // Open simulated galaxy catalog
-    const char* inputFileName = "../Catalogs/Aardvark/Catalog_v1.0/truth_oscillationcorrected_unrotated/Aardvark_v1.0c_truth.190.root";
+    // const char* inputFileName = "../Catalogs/Aardvark/Catalog_v1.0/truth_oscillationcorrected_unrotated/Aardvark_v1.0c_truth.190.root";
     TFile* inFile = TFile::Open(inputFileName);
+    if (inFile == 0) {
+        cout << "could not open file '" << inputFileName << "'" << endl;
+        return 2;
+    }
+
+    // Load the spherical coordinates of the galaxies from the input ROOT
+    // file
     TTree* tree = (TTree*)inFile->Get("bcc");
     bcc *r = new bcc(tree);
     if (r->fChain == 0)
         return 99;
 
-    // Load the spherical coordinates of the galaxies from the input ROOT
-    // file
     int kMaxGalaxies = 10000;
     float* ra = new float[kMaxGalaxies];
     float* dec = new float[kMaxGalaxies];
@@ -103,10 +99,11 @@ int main(int argc, char* argv[]) {
              << "Aborting execution" << endl;
         return 99;
     }
-    cout << "Processing " << numGalaxies << " galaxies" << endl;
+
 
     // Compute distances between all pairs of simulated galaxies and store
-    // results in galgal histogram in ROOT
+    // results in 'galgal' histogram in ROOT
+    cout << "Processing " << numGalaxies << " galaxies" << endl;
     const int kNumBins = 50000;
     const double kBinLow = 0.0;
     const double kBinUp = 0.2;
@@ -120,11 +117,17 @@ int main(int argc, char* argv[]) {
             cout << j << endl;
     }
 
-    // Save the histogram
+    // Close files
+    // Prepare output file
     // TFile* outFile = new TFile("../output/reference_no_gpu.root", "recreate");
-    TFile *outFile = new TFile(argv[2]);
+    TFile* outFile = TFile::Open(outputFileName, "recreate");
+    if (outFile == 0) {
+        cout << "could not create file '" << outputFileName << "'" << endl;
+        return 2;
+    }
     histo->Write();
     outFile->Close();
+    inFile->Close();
 
     return 0;
 }
