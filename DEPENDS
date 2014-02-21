@@ -1,9 +1,0 @@
-
-SL 6
-
-yum install cuda-repo-rhel6
-yum install cuda
-
-yum install root chealpix chealpix-devel healpix-c++ healpix-c++-devel healpix-devel healpix root-graf3d root-graf3d-gl root-physics cfitsio cfitsio-devel root-graf-fitsio
-
-
