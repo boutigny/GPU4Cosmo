@@ -8,4 +8,4 @@ outputDir=${topDir}/output
 
 inputFile="Aardvark/Catalog_v1.0/truth_oscillationcorrected_unrotated/Aardvark_v1.0c_truth.190.root"
 outputFile="reference_CUDA.root"
-${binDir}/cudaRef  ${dataDir}/${inputFile}  ${outputDir}/${outputFile}
+${binDir}/cudaref  ${dataDir}/${inputFile}  ${outputDir}/${outputFile}
