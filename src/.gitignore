@@ -1,3 +1,5 @@
 *.root
+*.orig
 angCorr
-cppRef
+cpuRef
+cudaRef
