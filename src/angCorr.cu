@@ -21,7 +21,7 @@ using namespace std;
 
 __device__ float angDist(float ra_1, float dec_1, float ra_2, float dec_2)
 {
-	float sindec1 = sinf(dec_1);
+    float sindec1 = sinf(dec_1);
     float cosdec1 = cosf(dec_1);
     float sindec2 = sinf(dec_2);
     float cosdec2 = cosf(dec_2);
@@ -36,13 +36,15 @@ __device__ float angDist(float ra_1, float dec_1, float ra_2, float dec_2)
 }
 
 
-__global__ void etBim(const float *ra, const float *dec, int *histo, const int nbins, const float bin_width, const float ang_min,
-                    const float ang_max, const int index, const int n) {
+__global__ void etBim(const float* ra, const float* dec, int* histo,
+                      const int nbins, const float bin_width, const float ang_min,
+                      const float ang_max, const int index, const int n)
+{
 
-// compute the angular separation between every object pair identified by their position in the ra and dec arrays//
-
+    // compute the angular separation between every object pair identified by
+    // their position in the ra and dec arrays
     unsigned int i = threadIdx.x + blockDim.x * blockIdx.x;
-    if(i < n) {
+    if (i < n) {
         float angle = angDist(ra[index], dec[index], ra[i+index+1], dec[i+index+1]);
         if (angle < ang_max) {
             int bin = (int)((angle-ang_min)/bin_width);
@@ -53,19 +55,20 @@ __global__ void etBim(const float *ra, const float *dec, int *histo, const int n
 }
 
 
-__global__ void etBimBam(const float *ra, const float *dec, const float *ra2, const float *dec2,
-                    int *histo, const int nbins, const float bin_width, const float ang_min,
-                    const float ang_max, const int index, const int n) {
-
-// compute angular separation between all objects in a first set (ra, dec) and their counterpart in a second set (ra2, dec2)
-//
+// compute angular separation between all objects in a first set (ra, dec)
+// and their counterpart in a second set (ra2, dec2)
+__global__ void etBimBam(const float* ra, const float* dec,
+    const float* ra2, const float* dec2,
+    int* histo, int nbins, float bin_width, float ang_min, float ang_max,
+    int index, int n)
+{
 
     unsigned int i = threadIdx.x + blockDim.x * blockIdx.x;
 
-    // There are 2 possibilities to compute the correlation between 2 different field,
-    // not completly sure which one is correct.
+    // There are 2 possibilities to compute the correlation between 2 different
+    // field, not completly sure which one is correct.
 
-    if(i < n) {
+    if (i < n) {
         float angle = angDist(ra[index], dec[index], ra2[i], dec2[i]);
         if (angle < ang_max) {
             int bin = (int)((angle-ang_min)/bin_width);
@@ -74,41 +77,44 @@ __global__ void etBimBam(const float *ra, const float *dec, const float *ra2, co
         }
     }
 
-/*	if(i < n) {
-		float angle = angDist(ra[index], dec[index], ra2[i+index+1], dec2[i+index+1]);
-        if (angle < ang_max) {
-            int bin = (int)((angle-ang_min)/bin_width);
-            int ibin = threadIdx.x*nbins+bin;
-            histo[ibin]++;
+    /*  if(i < n) {
+            float angle = angDist(ra[index], dec[index], ra2[i+index+1], dec2[i+index+1]);
+            if (angle < ang_max) {
+                int bin = (int)((angle-ang_min)/bin_width);
+                int ibin = threadIdx.x*nbins+bin;
+                histo[ibin]++;
+            }
         }
-    }
-*/
+    */
 }
 
 
 class rndField {
 
-// Generate a random field of galaxy positions (ra, dec) within a spherical tile
-// defined acoording to the HEALPix scheme
-//
-    public:
-        rndField(int);
-        double *getRaDec();
-        void genField(int, int);
-        double* getMap();
-    private:
-        Healpix_Base _base;
-        int _nside;
-        double* _map;
+    // Generate a random field of galaxy positions (ra, dec) within a spherical tile
+    // defined acoording to the HEALPix scheme
+    //
+public:
+    rndField(int);
+    double* getRaDec();
+    void genField(int, int);
+    double* getMap();
+
+private:
+    Healpix_Base _base;
+    int _nside;
+    double* _map;
 };
 
-rndField::rndField(int nside) : _nside(nside) {
 
+rndField::rndField(int nside) : _nside(nside)
+{
     _base = Healpix_Base(_nside,RING);
 }
 
-void rndField::genField(int cell, int values) {
 
+void rndField::genField(int cell, int values)
+{
     _map = new double[2*values];
 
     pointing p = _base.pix2ang(cell);
@@ -126,13 +132,13 @@ void rndField::genField(int cell, int values) {
     double ph_min = ph_c-7.0*pi/180.0;
     double ph_max = ph_c+7.0*pi/180.00;
 
-    //	Use the Planck random number generator available in HEALPix
+    //  Use the Planck random number generator available in HEALPix
     planck_rng rng;
 
     int count = 0;
     while (count < values) {
-       double phi = (ph_max-ph_min)*rng.rand_uni()+ph_min;
-       double theta = acos( (cth_max-cth_min)*rng.rand_uni()+cth_min );
+        double phi = (ph_max-ph_min)*rng.rand_uni()+ph_min;
+        double theta = acos( (cth_max-cth_min)*rng.rand_uni()+cth_min );
 
         pointing pt(theta,phi);
         int pix = _base.ang2pix(pt);
@@ -143,66 +149,73 @@ void rndField::genField(int cell, int values) {
         _map[values+count+1] = pi/2.0 - theta;
         count++;
 
-//        cout << count << " " << theta*180.0/pi << " - " << phi*180.0/pi << " "  << pix <<  endl;
+        // cout << count << " " << theta*180.0/pi << " - " << phi*180.0/pi << " "  << pix <<  endl;
     }
 }
 
-double* rndField::getMap() {
+
+double* rndField::getMap()
+{
     return _map;
 }
 
-class corelGPU {
 // Compute 2 point correlation function on GPU
 //
-	public:
-		corelGPU(int, int, float, float);
-		~corelGPU();
-		void loadValues(float*, float*);
-		void loadValues(float*, float*, float*, float*);
-		void run(int);
-		int* getHisto();
-		void resetHisto();
-		int getBlockSize();
-	private:
-		int _nentries;
-		int _nbins;
-		float _vMin;
-		float _vMax;
-		static const int _blockSize = 1024;
-		size_t _numBytes;
-		size_t _numBytesHisto;
-		float _binWidth;
+class corelGPU {
 
-		// _devX and _devY are 2 floating point arrays on device memory containing the values of
-		// the variables to be corelated
-		float* _devX;
-		float* _devY;
+public:
+    corelGPU(int, int, float, float);
+    ~corelGPU();
+    void loadValues(float*, float*);
+    void loadValues(float*, float*, float*, float*);
+    void run(int);
+    int* getHisto();
+    void resetHisto();
+    int getBlockSize();
 
-		// _devX2 and _devY2 : second set of quantities to be correlated when we
-		// we correlate 2 diffferent fields
-		float* _devX2;
-		float* _devY2;
+private:
+    int _nentries;
+    int _nbins;
+    float _vMin;
+    float _vMax;
+    static const int _blockSize = 1024;
+    size_t _numBytes;
+    size_t _numBytesHisto;
+    float _binWidth;
 
-		// _devHisto is an histogram containing the result of the correlation computation (distribution of the correlation values)
-		int* _devHisto;
+    // _devX and _devY are 2 floating point arrays on device memory containing
+    // the values of the variables to be corelated
+    float* _devX;
+    float* _devY;
+
+    // _devX2 and _devY2 : second set of quantities to be correlated when we
+    // we correlate 2 diffferent fields
+    float* _devX2;
+    float* _devY2;
+
+    // _devHisto is an histogram containing the result of the correlation
+    // computation (distribution of the correlation values)
+    int* _devHisto;
 };
 
-corelGPU::corelGPU(int nentries, int nbins, float vMin, float vMax) : _nentries(nentries), _nbins(nbins),
-			_vMin(vMin), _vMax(vMax)
+
+corelGPU::corelGPU(int nentries, int nbins, float vMin,
+                   float vMax) : _nentries(nentries), _nbins(nbins),
+    _vMin(vMin), _vMax(vMax)
 {
-	_numBytes = nentries*sizeof(float);
-	_numBytesHisto = nbins*_blockSize*sizeof(int);
+    _numBytes = nentries*sizeof(float);
+    _numBytesHisto = nbins*_blockSize*sizeof(int);
 
-	_devX = 0;
-	_devY = 0;
-	_devHisto =0;
+    _devX = 0;
+    _devY = 0;
+    _devHisto =0;
 
-	_devX2 = 0;
-	_devY2 = 0;
+    _devX2 = 0;
+    _devY2 = 0;
 
-	_binWidth = (vMax-vMin)/(float)nbins;
+    _binWidth = (vMax-vMin)/(float)nbins;
 
-	// allocate device memory
+    // allocate device memory
     //
     cudaMalloc((void**)&_devX, _numBytes);
     cudaMalloc((void**)&_devY, _numBytes);
@@ -210,105 +223,139 @@ corelGPU::corelGPU(int nentries, int nbins, float vMin, float vMax) : _nentries(
     cudaMalloc((void**)&_devHisto, _numBytesHisto);
     cudaMemset(_devHisto,0,_numBytesHisto);
 
-	// check allocation
+    // check allocation
     //
     assert(_devX != 0 && _devY != 0 && _devHisto != 0);
 }
-corelGPU::~corelGPU() {
+
+
+corelGPU::~corelGPU()
+{
 
     cudaFree(_devX);
     cudaFree(_devY);
     cudaFree(_devHisto);
 }
-void corelGPU::loadValues(float* xVal, float* yVal) {
 
+
+void corelGPU::loadValues(float* xVal, float* yVal)
+{
     // Copy xVal and yVal arrays to device memory
     //
     cudaMemcpy(_devX, xVal, _numBytes, cudaMemcpyHostToDevice);
     cudaMemcpy(_devY, yVal, _numBytes, cudaMemcpyHostToDevice);
 }
-void corelGPU::loadValues(float* xVal, float* yVal, float* x2Val, float* y2Val) {
 
-	// Allocate device memory for second set of values to be correlated
-	//
-	if(_devX2 == 0) cudaMalloc((void**)&_devX2, _numBytes);
-	if(_devY2 == 0) cudaMalloc((void**)&_devY2, _numBytes);
-	assert(_devX2 != 0 &&_devY2 !=0 );
+
+void corelGPU::loadValues(float* xVal, float* yVal, float* x2Val,
+                          float* y2Val)
+{
+
+    // Allocate device memory for second set of values to be correlated
+    //
+    if (_devX2 == 0) {
+        cudaMalloc((void**)&_devX2, _numBytes);
+    }
+    if (_devY2 == 0) {
+        cudaMalloc((void**)&_devY2, _numBytes);
+    }
+    assert(_devX2 != 0 &&_devY2 !=0 );
 
     // Copy arrays to device memory
     //
     cudaMemcpy(_devX, xVal, _numBytes, cudaMemcpyHostToDevice);
     cudaMemcpy(_devY, yVal, _numBytes, cudaMemcpyHostToDevice);
-	cudaMemcpy(_devX2, x2Val, _numBytes, cudaMemcpyHostToDevice);
+    cudaMemcpy(_devX2, x2Val, _numBytes, cudaMemcpyHostToDevice);
     cudaMemcpy(_devY2, y2Val, _numBytes, cudaMemcpyHostToDevice);
 }
-void corelGPU::run(int nsets) {
 
-	assert(nsets == 1 || nsets == 2);
 
-	if(nsets == 1) {
-		for (int k=0; k<_nentries-1; k++) {
-			if(k%1000 == 0) cout << k << endl;
-			size_t grid_size = (_nentries-k-1)/_blockSize;
-			if((_nentries-k-1) % _blockSize) ++grid_size;
+void corelGPU::run(int nsets)
+{
+    assert(nsets == 1 || nsets == 2);
 
-			// launch kernel
-			etBim<<<grid_size, _blockSize>>>(_devX, _devY, _devHisto, _nbins, _binWidth, _vMin, _vMax, k, (_nentries-k-1));
-		}
-	}
-	if(nsets == 2) {
-		size_t grid_size = _nentries/_blockSize;
-		if(_nentries % _blockSize) ++grid_size;
-		for (int k=0; k<_nentries; k++) {
-			if(k%1000 ==0) cout << k << endl;
-			// launch kernel
-			etBimBam<<<grid_size, _blockSize>>>(_devX, _devY, _devX2, _devY2, _devHisto, _nbins, _binWidth, _vMin, _vMax, k, _nentries);
-		}
+    if (nsets == 1) {
+        for (int k=0; k<_nentries-1; k++) {
+            if (k%1000 == 0) {
+                cout << k << endl;
+            }
+            size_t grid_size = (_nentries-k-1)/_blockSize;
+            if ((_nentries-k-1) % _blockSize) {
+                ++grid_size;
+            }
 
-/*		for (int k=0; k<_nentries-1; k++) {
-			if(k%1000 == 0) cout << k << endl;
-			size_t grid_size = (_nentries-k-1)/_blockSize;
-			if((_nentries-k-1) % _blockSize) ++grid_size;
+            // launch kernel
+            etBim<<<grid_size, _blockSize>>>(_devX, _devY, _devHisto, _nbins, _binWidth,
+                                             _vMin, _vMax, k, (_nentries-k-1));
+        }
+    }
+    if (nsets == 2) {
+        size_t grid_size = _nentries/_blockSize;
+        if (_nentries % _blockSize) {
+            ++grid_size;
+        }
+        for (int k=0; k<_nentries; k++) {
+            if (k%1000 ==0) {
+                cout << k << endl;
+            }
+            // launch kernel
+            etBimBam<<<grid_size, _blockSize>>>(_devX, _devY, _devX2, _devY2, _devHisto,
+                                                _nbins, _binWidth, _vMin, _vMax, k, _nentries);
+        }
 
-			// launch kernel
-			etBimBam<<<grid_size, _blockSize>>>(_devX, _devY, _devX2, _devY2, _devHisto, _nbins, _binWidth, _vMin, _vMax, k, (_nentries-k-1));
-		}
-*/
-	}
+        /*      for (int k=0; k<_nentries-1; k++) {
+                    if(k%1000 == 0) cout << k << endl;
+                    size_t grid_size = (_nentries-k-1)/_blockSize;
+                    if((_nentries-k-1) % _blockSize) ++grid_size;
+
+                    // launch kernel
+                    etBimBam<<<grid_size, _blockSize>>>(_devX, _devY, _devX2, _devY2, _devHisto, _nbins, _binWidth, _vMin, _vMax, k, (_nentries-k-1));
+                }
+        */
+    }
 
 }
-int* corelGPU::getHisto() {
-	int* histo = new int[_nbins*_blockSize];
 
-	// copy histogram back to host memory space
+
+int* corelGPU::getHisto()
+{
+    int* histo = new int[_nbins*_blockSize];
+
+    // copy histogram back to host memory space
     cudaMemcpy(histo, _devHisto, _numBytesHisto, cudaMemcpyDeviceToHost);
 
-	return histo;
+    return histo;
 }
 
-void corelGPU::resetHisto() {
 
+void corelGPU::resetHisto()
+{
     //Reinitialize histogram
     cudaMemset(_devHisto,0,_numBytesHisto);
 }
 
-int corelGPU::getBlockSize() {
-	return _blockSize;
+
+int corelGPU::getBlockSize()
+{
+    return _blockSize;
 }
+
 
 //
 // Show this program usage
 //
-void Usage(const char* path) {
+void Usage(const char* path)
+{
     const char* slash = strrchr(path, '/');
     const char* progName = (slash != NULL) ? ++slash : path;
     cout << "Usage: " << progName << " <inputFile> <outpuFile>" << endl;
 }
 
+
 // Main
 //
-int main(int argc, const char* argv[]) {
-
+int main(int argc, const char* argv[])
+{
     double pi = acos(-1.0);
 
     // Parse command line
@@ -321,11 +368,13 @@ int main(int argc, const char* argv[]) {
     //
     // TFile *f = new TFile("../Catalogs/Aardvark/Catalog_v1.0/truth_oscillationcorrected_unrotated/Aardvark_v1.0c_truth.190.root");
     const char* inputFileName = argv[1];
-    TFile *f = new TFile(inputFileName);
-    TTree *tree = (TTree*)f->Get("bcc");
-    bcc *r = new bcc(tree);
+    TFile* f = new TFile(inputFileName);
+    TTree* tree = (TTree*)f->Get("bcc");
+    bcc* r = new bcc(tree);
 
-    if (r->fChain == 0) return 99;
+    if (r->fChain == 0) {
+        return 99;
+    }
 
     Long64_t nentries = r->fChain->GetEntriesFast();
 
@@ -335,13 +384,14 @@ int main(int argc, const char* argv[]) {
 
     // Prepare histogram arrays
     // In order to avoid conflicts between threads while writing to memory
-	// we use 1 histogram with nbins bins per thread
+    // we use 1 histogram with nbins bins per thread
     //
     int nbins = 50000;
     float ang_min = 0.0;
     float ang_max = 0.2;
 
-    TH1* galgal = new TH1F("galgal", "GPU - Distance galaxy - galaxy", nbins, ang_min, ang_max);
+    TH1* galgal = new TH1F("galgal", "GPU - Distance galaxy - galaxy", nbins,
+                           ang_min, ang_max);
     TH1* zdis = new TH1F("zdis", "z distribution", 200, 0., 2.);
 
     // Extract ra, dec values from ntuple and copy them into two arrays
@@ -351,15 +401,17 @@ int main(int argc, const char* argv[]) {
     float* dec = new float[nentries];
     int nvalues = 0;
     for (Long64_t jentry=0; jentry<nentries; jentry++) {
-        if (r->LoadTree(jentry) < 0)
+        if (r->LoadTree(jentry) < 0) {
             break;
+        }
 
-        if (r->GetEntry(jentry) == 0)
+        if (r->GetEntry(jentry) == 0) {
             break;
+        }
 
         float z = r->z;
-		zdis->Fill(z);
-        if(z>z_min && z<z_max) {
+        zdis->Fill(z);
+        if (z>z_min && z<z_max) {
             ra[nvalues] = r->ra*pi/180.0;
             dec[nvalues] = r->dec*pi/180.0;
             nvalues++;
@@ -392,11 +444,12 @@ int main(int argc, const char* argv[]) {
     rndField* field = new rndField(nsides);
     field -> genField(cell, nvalues);
 
-    double *map = field->getMap();
+    double* map = field->getMap();
 
     // Create histogram to check that theta / phi distribution is as expected
     //
-    TH2* gal = new TH2F("gal", "Random galaxy phi / theta distribution", 100, 24, 37, 100, 156, 170);
+    TH2* gal = new TH2F("gal", "Random galaxy phi / theta distribution", 100, 24,
+                        37, 100, 156, 170);
 
     // compute 2 point correlation function from galaxy positions in the random field
     //
@@ -415,7 +468,8 @@ int main(int argc, const char* argv[]) {
 
     // fill root histogram
     //
-    TH1* rndrnd = new TH1F("rndrnd", "GPU - Distance random - random", nbins, ang_min, ang_max);
+    TH1* rndrnd = new TH1F("rndrnd", "GPU - Distance random - random", nbins,
+                           ang_min, ang_max);
 
     for (int i=0; i<nbins; i++) {
         for (int j=0; j<corel->getBlockSize(); j++) {
@@ -435,7 +489,8 @@ int main(int argc, const char* argv[]) {
 
     // fill root histogram
     //
-    TH1* galrnd = new TH1F("galrnd", "GPU - Distance galaxy - random", nbins, ang_min, ang_max);
+    TH1* galrnd = new TH1F("galrnd", "GPU - Distance galaxy - random", nbins,
+                           ang_min, ang_max);
 
     for (int i=0; i<nbins; i++) {
         for (int j=0; j<corel->getBlockSize(); j++) {
@@ -446,7 +501,8 @@ int main(int argc, const char* argv[]) {
 
     // Compute random field corrected correlation function
     //
-    TH1* corr = new TH1F("corr", "Corrected angular correlation function", nbins, ang_min, ang_max);
+    TH1* corr = new TH1F("corr", "Corrected angular correlation function", nbins,
+                         ang_min, ang_max);
     //Normalization
     //
     float ggnorm = (nvalues*nvalues - nvalues)/2.0;
@@ -466,7 +522,7 @@ int main(int argc, const char* argv[]) {
     delete corel;
 
     // TFile *h = new TFile("../output/gpu.root","recreate");
-    TFile *h = TFile::Open(argv[2], "recreate");
+    TFile* h = TFile::Open(argv[2], "recreate");
 
     galgal->Write();
     gal->Write();
@@ -478,5 +534,3 @@ int main(int argc, const char* argv[]) {
 
     return 0;
 }
-
-

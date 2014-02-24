@@ -51,19 +51,25 @@ OUTPUT_DIR = ../output
 
 # Targets
 #
-.PHONY: all clean buildall testcpu testcuda testall
+.PHONY: all cpuref cudaref angcorr clean buildall testcpu testcuda testall
 
-all: $(BIN_DIR)/angCorr $(BIN_DIR)/cpuRef $(BIN_DIR)/cudaRef
+all: cpuref cudaref angcorr
 
-$(BIN_DIR)/angCorr: angCorr.o
+cpuref: $(BIN_DIR)/cpuref
+
+cudaref: $(BIN_DIR)/cudaref
+
+angcorr: $(BIN_DIR)/angcorr
+
+$(BIN_DIR)/angcorr: angCorr.o
 	@echo -e "\nLinking" $@
 	$(NVCC) $(ALL_LD_FLAGS) angCorr.o -o $@
 
-$(BIN_DIR)/cpuRef: $(CXX_OBJECTS)
+$(BIN_DIR)/cpuref: $(CXX_OBJECTS)
 	@echo -e "\nLinking" $@
 	$(CXX) $(ROOT_LD_FLAGS) $(CXX_OBJECTS) -o $@
 
-$(BIN_DIR)/cudaRef: cudaRef.o
+$(BIN_DIR)/cudaref: cudaRef.o
 	@echo -e "\nLinking" $@
 	$(NVCC) $(ALL_LD_FLAGS) cudaRef.o -o $@
 
