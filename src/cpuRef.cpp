@@ -18,7 +18,8 @@ using namespace std;
 // Return angular distance between two points in spherical coordinates.
 // ra_ and dec_ are right ascension and declination in radians for the two points.
 //
-float AngDistance(float ra_1, float dec_1, float ra_2, float dec_2) {
+float AngDistance(float ra_1, float dec_1, float ra_2, float dec_2)
+{
     float sindec1 = sinf(dec_1);
     float cosdec1 = cosf(dec_1);
     float sindec2 = sinf(dec_2);
@@ -37,7 +38,8 @@ float AngDistance(float ra_1, float dec_1, float ra_2, float dec_2) {
 //
 // Converts a value in degrees to radians
 //
-inline float DegToRad(float deg) {
+inline float DegToRad(float deg)
+{
     const float PI = acosf(-1.0);
     return deg * (PI/180.0f);
 }
@@ -46,7 +48,8 @@ inline float DegToRad(float deg) {
 //
 // Show this program usage
 //
-void Usage(const char* path) {
+void Usage(const char* path)
+{
     const char* slash = strrchr(path, '/');
     const char* progName = (slash != NULL) ? ++slash : path;
     cout << "Usage: " << progName << " <inputFile> <outpuFile>" << endl;
@@ -56,7 +59,8 @@ void Usage(const char* path) {
 //
 // Main
 //
-int main(int argc, const char* argv[]) {
+int main(int argc, const char* argv[])
+{
     // Parse command line
     if (argc < 3) {
         Usage(argv[0]);
@@ -76,19 +80,22 @@ int main(int argc, const char* argv[]) {
     // Load the spherical coordinates of the galaxies from the input ROOT
     // file
     TTree* tree = (TTree*)inFile->Get("bcc");
-    bcc *r = new bcc(tree);
-    if (r->fChain == 0)
+    bcc* r = new bcc(tree);
+    if (r->fChain == 0) {
         return 99;
+    }
 
     int kMaxGalaxies = 10000;
     float* ra = new float[kMaxGalaxies];
     float* dec = new float[kMaxGalaxies];
     Long64_t numGalaxies;
     for (numGalaxies=0; numGalaxies < kMaxGalaxies; numGalaxies++) {
-        if (r->LoadTree(numGalaxies) < 0)
+        if (r->LoadTree(numGalaxies) < 0) {
             break;
-        if (r->GetEntry(numGalaxies) == 0)
+        }
+        if (r->GetEntry(numGalaxies) == 0) {
             break;
+        }
         ra[numGalaxies] = DegToRad(r->ra);
         dec[numGalaxies] = DegToRad(r->dec);
     }
@@ -107,14 +114,16 @@ int main(int argc, const char* argv[]) {
     const int kNumBins = 50000;
     const double kBinLow = 0.0;
     const double kBinUp = 0.2;
-    TH1* histo = new TH1F("galgal", "Distance galaxy - galaxy", kNumBins, kBinLow, kBinUp);
+    TH1* histo = new TH1F("galgal", "Distance galaxy - galaxy", kNumBins, kBinLow,
+                          kBinUp);
     for (int j=0; j < numGalaxies-1; j++) {
         for (int k=j+1; k < numGalaxies; k++) {
             histo->Fill(AngDistance(ra[j], dec[j], ra[k], dec[k]));
         }
 
-        if (j%100 == 0)
+        if (j%100 == 0) {
             cout << j << endl;
+        }
     }
 
     // Close files
