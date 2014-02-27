@@ -39,7 +39,7 @@ ALL_LD_FLAGS  += $(addprefix -Xlinker ,$(HEALPIX_LD_FLAGS))
 #
 .SUFFIXES : .o .cu .cpp
 
-CUDA_SOURCES := angCorr.cu cudaRef.cu
+CUDA_SOURCES := angCorr.cu cudaRef.cu queryGPU.cu
 CUDA_OBJECTS  = $(CUDA_SOURCES:.cu=.o)
 
 CXX_SOURCES  := cpuRef.cpp checkHisto.cpp
@@ -52,23 +52,29 @@ OUTPUT_DIR = ../output
 
 # Targets
 #
-.PHONY: all cpuref cudaref angcorr checkhisto clean buildall testcpu testcuda testall
+.PHONY: all cpuref cudaref angcorr checkhisto querygpu clean buildall testcpu testcuda testall
 
-all: cpuref cudaref angcorr checkhisto
+all: cpuref cudaref angcorr checkhisto querygpu
 
 cpuref: $(BIN_DIR)/cpuref
+
+checkhisto: $(BIN_DIR)/checkhisto
 
 cudaref: $(BIN_DIR)/cudaref
 
 angcorr: $(BIN_DIR)/angcorr
 
-checkhisto: $(BIN_DIR)/checkhisto
+querygpu: $(BIN_DIR)/querygpu
 
 $(BIN_DIR)/angcorr: angCorr.o
 	@echo -e "\nLinking" $@
 	$(NVCC) $(ALL_LD_FLAGS) -o $@ $<
 
 $(BIN_DIR)/cudaref: cudaRef.o
+	@echo -e "\nLinking" $@
+	$(NVCC) $(ALL_LD_FLAGS) -o $@ $<
+
+$(BIN_DIR)/querygpu: queryGPU.o
 	@echo -e "\nLinking" $@
 	$(NVCC) $(ALL_LD_FLAGS) -o $@ $<
 
@@ -89,7 +95,7 @@ $(BIN_DIR)/checkhisto: checkHisto.o
 	$(CXX) $(CXX_FLAGS) $(ROOT_CXX_FLAGS) -o $@ -c $<
 
 clean:
-	-rm -f $(BIN_DIR)/angCorr $(BIN_DIR)/cpuRef $(BIN_DIR)/cudaRef $(BIN_DIR)/checkhisto *.o *~ $(OUTPUT_DIR)/*.root
+	@-rm -f $(BIN_DIR)/* $(OUTPUT_DIR)/*.root *.o *~
 
 buildall: clean all
 
