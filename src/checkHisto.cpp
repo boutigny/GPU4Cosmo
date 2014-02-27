@@ -56,43 +56,55 @@ int main(int argc, const char* argv[])
     TH1F* histo1 = (TH1F*)file1->Get(histoKey);
     TH1F* histo2 = (TH1F*)file2->Get(histoKey);
     cout << "Histogram comparison:" << endl
-         << "   file1: '" << fileName1 << "'"
-         << endl
-         << "   file2: '" << fileName2 << "'"
-         << endl;
-    cout << "Number of entries:" << endl
-         << "   1: " << (int)histo1->GetEntries()
-         << endl
-         << "   2: " << (int)histo2->GetEntries()
-         << endl;
-    cout << "Integral:" << endl
-         << "   1: " << histo1->Integral()
-         << endl
-         << "   2: " << histo2->Integral()
-         << endl;
+         << "   file1: '" << fileName1 << "'" << endl
+         << "   file2: '" << fileName2 << "'" << endl;
+    int entries1 = (int)histo1->GetEntries();
+    int entries2 = (int)histo2->GetEntries();
+    if (entries1 != entries2) {
+        cout << "Number of entries:" << endl
+             << "   1: " << (int)histo1->GetEntries() << endl
+             << "   2: " << (int)histo2->GetEntries() << endl
+             << "   difference: " << abs(entries1 - entries2) << endl;
+    }
+
+    int integral1 = (int)histo1->GetEntries();
+    int integral2 = (int)histo2->GetEntries();
+    if (entries1 != entries2) {
+        cout << "Integral:" << endl
+             << "   1: " << (int)histo1->Integral() << endl
+             << "   2: " << (int)histo2->Integral() << endl
+             << "   difference: " << abs(integral1 - integral2) << endl;
+        cout << "Undeflow bin:" << endl
+             << "   1: " << (int)histo1->GetBinContent(0) << endl
+             << "   2: " << (int)histo2->GetBinContent(0) << endl;
+        cout << "Overflow bin:" << endl
+             << "   1: " << (int)histo1->GetBinContent(histo1->GetNbinsX() + 1) << endl
+             << "   2: " << (int)histo2->GetBinContent(histo2->GetNbinsX() + 1) << endl;
+    }
 
     if (histo1->GetNbinsX() != histo2->GetNbinsX()) {
         cerr << "ERROR: number of bins differ" << endl
-             << "   1: " << histo1->GetNbinsX()
-             << endl
-             << "   2: " << histo2->GetNbinsX()
-             << endl;
+             << "   1: " << histo1->GetNbinsX() << endl
+             << "   2: " << histo2->GetNbinsX() << endl;
         return 2;
     }
 
-    // Compare bin-wise: ignore underfow and overflow bins
+    // Compare binwise contents of the two input histograms, ignoring underfow
+    // and overflow bins.
+    TH1F* binHisto = new TH1F("bindiff", "Bin-wise differences", 1000, 0.0f, 1000.f);
     for (int bin=1; bin <= histo1->GetNbinsX(); bin++) {
         int content1 = (int)histo1->GetBinContent(bin);
         int content2 = (int)histo2->GetBinContent(bin);
+
+        // Only add an entry if there is a difference among these two bins.
         if (content1 != content2) {
-            cerr << "ERROR: bin contents differ for bin " << bin << endl
-                 << "   1: " << content1
-                 << endl
-                 << "   2: " << content2
-                 << endl;
-            return 2;
+            binHisto->Fill(abs(content1 - content2));
         }
     }
+    cout << "Summary of bin differences:" << endl
+         << "   Total number of bins with differences: " << (int)histo1->Integral() << endl
+         << "   Mean of the differences: " << binHisto->GetMean() << endl
+         << "   RMS of the differences: "  << binHisto->GetRMS() << endl;
 
     // Close files
     file1->Close();
