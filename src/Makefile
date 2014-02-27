@@ -1,7 +1,8 @@
-# C++ compiler settings
+# C++ compiler and linker settings
 #
 CXX       ?= /usr/bin/g++
 CXX_FLAGS := -Wall -Wno-unknown-pragmas
+LD_FLAGS  := -lm -lstdc++
 
 # ROOT settings
 #
@@ -23,7 +24,7 @@ HEALPIX_LD_FLAGS  := -L$(HEALPIX_PATH)/src/cxx/basic_gcc/lib -lhealpix_cxx -lcxx
 CUDA_PATH     ?= /opt/cuda-5.5
 NVCC          := $(CUDA_PATH)/bin/nvcc -ccbin $(CXX)
 NVCC_CC_FLAGS := -g -G -I$(CUDA_PATH)/include
-NVCC_LD_FLAGS := -L$(CUDA_PATH)/lib -lcuda -lm -lstdc++
+NVCC_LD_FLAGS := -L$(CUDA_PATH)/lib -lcuda
 
 ALL_CC_FLAGS  := $(NVCC_CC_FLAGS)
 ALL_CC_FLAGS  += $(addprefix -Xcompiler ,$(CXX_FLAGS))
@@ -41,7 +42,7 @@ ALL_LD_FLAGS  += $(addprefix -Xlinker ,$(HEALPIX_LD_FLAGS))
 CUDA_SOURCES := angCorr.cu cudaRef.cu
 CUDA_OBJECTS  = $(CUDA_SOURCES:.cu=.o)
 
-CXX_SOURCES  := cpuRef.cpp
+CXX_SOURCES  := cpuRef.cpp checkHisto.cpp
 CXX_OBJECTS   = $(CXX_SOURCES:.cpp=.o)
 
 # Directories
@@ -51,9 +52,9 @@ OUTPUT_DIR = ../output
 
 # Targets
 #
-.PHONY: all cpuref cudaref angcorr clean buildall testcpu testcuda testall
+.PHONY: all cpuref cudaref angcorr checkhisto clean buildall testcpu testcuda testall
 
-all: cpuref cudaref angcorr
+all: cpuref cudaref angcorr checkhisto
 
 cpuref: $(BIN_DIR)/cpuref
 
@@ -61,17 +62,23 @@ cudaref: $(BIN_DIR)/cudaref
 
 angcorr: $(BIN_DIR)/angcorr
 
+checkhisto: $(BIN_DIR)/checkhisto
+
 $(BIN_DIR)/angcorr: angCorr.o
 	@echo -e "\nLinking" $@
-	$(NVCC) $(ALL_LD_FLAGS) angCorr.o -o $@
-
-$(BIN_DIR)/cpuref: $(CXX_OBJECTS)
-	@echo -e "\nLinking" $@
-	$(CXX) $(ROOT_LD_FLAGS) $(CXX_OBJECTS) -o $@
+	$(NVCC) $(ALL_LD_FLAGS) -o $@ $<
 
 $(BIN_DIR)/cudaref: cudaRef.o
 	@echo -e "\nLinking" $@
-	$(NVCC) $(ALL_LD_FLAGS) cudaRef.o -o $@
+	$(NVCC) $(ALL_LD_FLAGS) -o $@ $<
+
+$(BIN_DIR)/cpuref: cpuRef.o
+	@echo -e "\nLinking" $@
+	$(CXX) $(LD_FLAGS) $(ROOT_LD_FLAGS) -o $@ $<
+
+$(BIN_DIR)/checkhisto: checkHisto.o
+	@echo -e "\nLinking" $@
+	$(CXX) $(LD_FLAGS) $(ROOT_LD_FLAGS) -o $@ $<
 
 .cu.o:
 	@echo -e "\nCompiling" $<
@@ -82,7 +89,7 @@ $(BIN_DIR)/cudaref: cudaRef.o
 	$(CXX) $(CXX_FLAGS) $(ROOT_CXX_FLAGS) -o $@ -c $<
 
 clean:
-	-rm -f $(BIN_DIR)/angCorr $(BIN_DIR)/cpuRef $(BIN_DIR)/cudaRef *.o *~ $(OUTPUT_DIR)/*.root
+	-rm -f $(BIN_DIR)/angCorr $(BIN_DIR)/cpuRef $(BIN_DIR)/cudaRef $(BIN_DIR)/checkhisto *.o *~ $(OUTPUT_DIR)/*.root
 
 buildall: clean all
 
