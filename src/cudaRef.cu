@@ -247,6 +247,7 @@ int main(int argc, const char* argv[])
     // Extract ra, dec values from ntuple and copy them into two arrays
     // Select ra and dec only if they belong to the redshift slice
     //
+    int kMaxGalaxies = 10000;
     Long64_t nentries = r->fChain->GetEntriesFast();
     float* ra = new float[nentries];
     float* dec = new float[nentries];
@@ -261,11 +262,13 @@ int main(int argc, const char* argv[])
         }
 
         float z = r->z;
-        if (z > z_min && z < z_max) {
+        if (true || (z > z_min && z < z_max)) {
             ra[nvalues] = DegToRad(r->ra);
             dec[nvalues] = DegToRad(r->dec);
             nvalues++;
         }
+
+        if (nvalues == kMaxGalaxies) break;
     }
 
     // Do the correlation computation
@@ -284,6 +287,7 @@ int main(int argc, const char* argv[])
             galgal->SetBinContent(i+1, kbin+histo[j*nbins + i]);
         }
     }
+    galgal->ResetStats();
 
     // free memory
     delete ra;
