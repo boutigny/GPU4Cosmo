@@ -98,11 +98,14 @@ int main(int argc, const char* argv[])
 
         // Only add an entry if there is a difference among these two bins.
         if (content1 != content2) {
+//            if ( abs(content1-content2) > 10) {
+//                cout << bin << " " << content1 << " " << content2 << endl;
+//            }
             binHisto->Fill(abs(content1 - content2));
         }
     }
     cout << "Summary of bin differences:" << endl
-         << "   Total number of bins with differences: " << (int)histo1->Integral() << endl
+         << "   Total number of bins with differences: " << (int)binHisto->Integral() << endl
          << "   Mean of the differences: " << binHisto->GetMean() << endl
          << "   RMS of the differences: "  << binHisto->GetRMS() << endl;
 

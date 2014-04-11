@@ -22,7 +22,7 @@ HEALPIX_LD_FLAGS  := -L$(HEALPIX_PATH)/src/cxx/basic_gcc/lib -lhealpix_cxx -lcxx
 # CUDA compiler settings
 #
 CUDA_PATH     ?= /opt/cuda-5.5
-NVCC          := $(CUDA_PATH)/bin/nvcc -ccbin $(CXX)
+NVCC          := $(CUDA_PATH)/bin/nvcc -ccbin $(CXX) -arch=sm_11
 NVCC_CC_FLAGS := -g -G -I$(CUDA_PATH)/include
 NVCC_LD_FLAGS := -L$(CUDA_PATH)/lib -lcuda
 

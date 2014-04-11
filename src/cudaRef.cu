@@ -2,6 +2,9 @@
 #include <assert.h>
 #include "math.h"
 
+#include "cuda.h"
+#include "device_functions.h"
+
 #include "TFile.h"
 #include "TApplication.h"
 #include "TTree.h"
@@ -43,7 +46,8 @@ __global__ void etBim(const float* ra, const float* dec,
         if (angle < ang_max) {
             int bin = (int)((angle - ang_min)/bin_width);
             int ibin = threadIdx.x*nbins + bin;
-            histo[ibin]++;
+//            histo[ibin]++;
+            atomicAdd(&histo[ibin],1);
         }
     }
 }
