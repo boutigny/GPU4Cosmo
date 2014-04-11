@@ -211,7 +211,7 @@ void Usage(const char* path)
 {
     const char* slash = strrchr(path, '/');
     const char* progName = (slash != NULL) ? ++slash : path;
-    cout << "Usage: " << progName << " <inputFile> <outpuFile> <number_of_bins_in_histogram> <first_device> <last_device> (start at 0)" << endl;
+    cout << "Usage: " << progName << " <inputFile> <outpuFile> <number_of_bins_in_histogram> <first_device> <last_device> (start at 0) <number of galaxies>" << endl;
 }
 
 
@@ -220,7 +220,7 @@ void Usage(const char* path)
 int main(int argc, const char* argv[])
 {
     // Parse command line
-    if (argc < 6) {
+    if (argc < 7) {
         Usage(argv[0]);
         return 1;
     }
@@ -230,6 +230,7 @@ int main(int argc, const char* argv[])
     int nbins = atoi(argv[3]);
     int dev_1 = atoi(argv[4]);
     int dev_2 = atoi(argv[5]);
+    int kMaxGalaxies = atoi(argv[6]);
     
     cout << "Using device " << dev_1 << " to " << dev_2 << endl;
 
@@ -256,7 +257,6 @@ int main(int argc, const char* argv[])
     // Extract ra, dec values from ntuple and copy them into two arrays
     // Select ra and dec only if they belong to the redshift slice
     //
-    int kMaxGalaxies = 10000;
     Long64_t nentries = r->fChain->GetEntriesFast();
     float* ra = new float[nentries];
     float* dec = new float[nentries];

@@ -52,7 +52,7 @@ void Usage(const char* path)
 {
     const char* slash = strrchr(path, '/');
     const char* progName = (slash != NULL) ? ++slash : path;
-    cout << "Usage: " << progName << " <inputFile> <outpuFile> <number of bins>" << endl;
+    cout << "Usage: " << progName << " <inputFile> <outpuFile> <number of bins> <number of galaxies>" << endl;
 }
 
 
@@ -62,13 +62,14 @@ void Usage(const char* path)
 int main(int argc, const char* argv[])
 {
     // Parse command line
-    if (argc < 4) {
+    if (argc < 5) {
         Usage(argv[0]);
         return 1;
     }
     const char* inputFileName = argv[1];
     const char* outputFileName = argv[2];
     const int kNumBins = atoi(argv[3]); 
+    int kMaxGalaxies = atoi(argv[4]);
     
 
     // Open simulated galaxy catalog
@@ -87,7 +88,6 @@ int main(int argc, const char* argv[])
         return 99;
     }
 
-    int kMaxGalaxies = 10000;
     float* ra = new float[kMaxGalaxies];
     float* dec = new float[kMaxGalaxies];
     Long64_t numGalaxies;
