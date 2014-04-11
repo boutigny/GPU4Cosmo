@@ -52,7 +52,7 @@ void Usage(const char* path)
 {
     const char* slash = strrchr(path, '/');
     const char* progName = (slash != NULL) ? ++slash : path;
-    cout << "Usage: " << progName << " <inputFile> <outpuFile>" << endl;
+    cout << "Usage: " << progName << " <inputFile> <outpuFile> <number of bins>" << endl;
 }
 
 
@@ -62,12 +62,14 @@ void Usage(const char* path)
 int main(int argc, const char* argv[])
 {
     // Parse command line
-    if (argc < 3) {
+    if (argc < 4) {
         Usage(argv[0]);
         return 1;
     }
     const char* inputFileName = argv[1];
     const char* outputFileName = argv[2];
+    const int kNumBins = atoi(argv[3]); 
+    
 
     // Open simulated galaxy catalog
     // const char* inputFileName = "../Catalogs/Aardvark/Catalog_v1.0/truth_oscillationcorrected_unrotated/Aardvark_v1.0c_truth.190.root";
@@ -111,7 +113,7 @@ int main(int argc, const char* argv[])
     // Compute distances between all pairs of simulated galaxies and store
     // results in 'galgal' histogram in ROOT
     cout << "Processing " << numGalaxies << " galaxies" << endl;
-    const int kNumBins = 50000;
+
     const double kBinLow = 0.0;
     const double kBinUp = 0.2;
     TH1* histo = new TH1F("galgal", "Distance galaxy - galaxy", kNumBins, kBinLow,
