@@ -62,17 +62,26 @@ int main(int argc, const char* argv[])
     int entries2 = (int)histo2->GetEntries();
     if (entries1 != entries2) {
         cout << "Number of entries:" << endl
-             << "   1: " << (int)histo1->GetEntries() << endl
-             << "   2: " << (int)histo2->GetEntries() << endl
+             << "   1: " << entries1 << endl
+             << "   2: " << entries2 << endl
              << "   difference: " << abs(entries1 - entries2) << endl;
     }
 
+    int sum1 = (int)histo1->GetSumOfWeights();
+    int sum2 = (int)histo2->GetSumOfWeights();
+    if (sum1 != sum2) {
+       cout << "Sum of Weights:" << endl
+            << "   1: " << sum1 << endl
+            << "   2: " << sum2 << endl
+            << "   difference: " << abs(sum1 - sum2) << endl;
+    }  
+
     int integral1 = (int)histo1->GetEntries();
     int integral2 = (int)histo2->GetEntries();
-    if (entries1 != entries2) {
+    if (integral1 != integral2) {
         cout << "Integral:" << endl
-             << "   1: " << (int)histo1->Integral() << endl
-             << "   2: " << (int)histo2->Integral() << endl
+             << "   1: " << integral1 << endl
+             << "   2: " << integral2 << endl
              << "   difference: " << abs(integral1 - integral2) << endl;
         cout << "Undeflow bin:" << endl
              << "   1: " << (int)histo1->GetBinContent(0) << endl
@@ -81,6 +90,7 @@ int main(int argc, const char* argv[])
              << "   1: " << (int)histo1->GetBinContent(histo1->GetNbinsX() + 1) << endl
              << "   2: " << (int)histo2->GetBinContent(histo2->GetNbinsX() + 1) << endl;
     }
+
 
     if (histo1->GetNbinsX() != histo2->GetNbinsX()) {
         cerr << "ERROR: number of bins differ" << endl
@@ -102,7 +112,7 @@ int main(int argc, const char* argv[])
         }
     }
     cout << "Summary of bin differences:" << endl
-         << "   Total number of bins with differences: " << (int)histo1->Integral() << endl
+         << "   Total number of bins with differences: " << (int)binHisto->Integral() << endl
          << "   Mean of the differences: " << binHisto->GetMean() << endl
          << "   RMS of the differences: "  << binHisto->GetRMS() << endl;
 
