@@ -8,4 +8,4 @@ outputDir=${topDir}/output
 
 inputFile="Aardvark/Catalog_v1.0/truth_oscillationcorrected_unrotated/Aardvark_v1.0c_truth.190.root"
 outputFile="reference_CPU.root"
-${binDir}/cpuref  ${dataDir}/${inputFile}  ${outputDir}/${outputFile}
+${binDir}/cpuref  ${dataDir}/${inputFile}  ${outputDir}/${outputFile} 50000 200000
