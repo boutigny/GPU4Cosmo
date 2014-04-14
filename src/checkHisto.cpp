@@ -58,6 +58,7 @@ int main(int argc, const char* argv[])
     cout << "Histogram comparison:" << endl
          << "   file1: '" << fileName1 << "'" << endl
          << "   file2: '" << fileName2 << "'" << endl;
+
     int entries1 = (int)histo1->GetEntries();
     int entries2 = (int)histo2->GetEntries();
     if (entries1 != entries2) {
@@ -101,16 +102,13 @@ int main(int argc, const char* argv[])
 
     // Compare binwise contents of the two input histograms, ignoring underfow
     // and overflow bins.
-    TH1F* binHisto = new TH1F("bindiff", "Bin-wise differences", 1000, 0.0f, 1000.f);
+    TH1F* binHisto = new TH1F("bindiff", "Bin-wise differences", 1000, 0.0f, 1000.0f);
     for (int bin=1; bin <= histo1->GetNbinsX(); bin++) {
         int content1 = (int)histo1->GetBinContent(bin);
         int content2 = (int)histo2->GetBinContent(bin);
 
         // Only add an entry if there is a difference among these two bins.
         if (content1 != content2) {
-//            if ( abs(content1-content2) > 10) {
-//                cout << bin << " " << content1 << " " << content2 << endl;
-//            }
             binHisto->Fill(abs(content1 - content2));
         }
     }
